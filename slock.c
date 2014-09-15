@@ -25,9 +25,7 @@
 
 typedef struct {
 	int screen;
-	Window root, win;
-	Pixmap pmap;
-	unsigned long colors[2];
+	Window win;
 } Lock;
 
 static Lock **locks;
@@ -157,12 +155,10 @@ readpw(Display *dpy, const char *pws)
 			}
 			if(llen == 0 && len != 0) {
 				for(screen = 0; screen < nscreens; screen++) {
-					XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[1]);
 					XClearWindow(dpy, locks[screen]->win);
 				}
 			} else if(llen != 0 && len == 0) {
 				for(screen = 0; screen < nscreens; screen++) {
-					XSetWindowBackground(dpy, locks[screen]->win, locks[screen]->colors[0]);
 					XClearWindow(dpy, locks[screen]->win);
 				}
 			}
@@ -179,8 +175,6 @@ unlockscreen(Display *dpy, Lock *lock) {
 		return;
 
 	XUngrabPointer(dpy, CurrentTime);
-	XFreeColors(dpy, DefaultColormap(dpy, lock->screen), lock->colors, 2, 0);
-	XFreePixmap(dpy, lock->pmap);
 	XDestroyWindow(dpy, lock->win);
 
 	free(lock);
@@ -188,12 +182,10 @@ unlockscreen(Display *dpy, Lock *lock) {
 
 static Lock *
 lockscreen(Display *dpy, int screen) {
-	char curs[] = {0, 0, 0, 0, 0, 0, 0, 0};
 	unsigned int len;
 	Lock *lock;
-	XColor color, dummy;
 	XSetWindowAttributes wa;
-	Cursor invisible;
+	Cursor cursor;
 
 	if(dpy == NULL || screen < 0)
 		return NULL;
@@ -204,31 +196,26 @@ lockscreen(Display *dpy, int screen) {
 
 	lock->screen = screen;
 
-	lock->root = RootWindow(dpy, lock->screen);
-
 	/* init */
 	wa.override_redirect = 1;
-	wa.background_pixel = BlackPixel(dpy, lock->screen);
-	lock->win = XCreateWindow(dpy, lock->root, 0, 0, DisplayWidth(dpy, lock->screen), DisplayHeight(dpy, lock->screen),
-			0, DefaultDepth(dpy, lock->screen), CopyFromParent,
-			DefaultVisual(dpy, lock->screen), CWOverrideRedirect | CWBackPixel, &wa);
-	XAllocNamedColor(dpy, DefaultColormap(dpy, lock->screen), COLOR2, &color, &dummy);
-	lock->colors[1] = color.pixel;
-	XAllocNamedColor(dpy, DefaultColormap(dpy, lock->screen), COLOR1, &color, &dummy);
-	lock->colors[0] = color.pixel;
-	lock->pmap = XCreateBitmapFromData(dpy, lock->win, curs, 8, 8);
-	invisible = XCreatePixmapCursor(dpy, lock->pmap, lock->pmap, &color, &color, 0, 0);
-	XDefineCursor(dpy, lock->win, invisible);
+
+	lock->win = XCreateWindow(dpy, DefaultRootWindow(dpy), 0, 0, 1,1,
+    			0, CopyFromParent, CopyFromParent,
+	    		CopyFromParent, CWOverrideRedirect, &wa);
+ 
+    cursor = XCreateFontCursor(dpy, 2);
+	XDefineCursor(dpy, lock->win, cursor);
+
 	XMapRaised(dpy, lock->win);
 	for(len = 1000; len; len--) {
-		if(XGrabPointer(dpy, lock->root, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
-			GrabModeAsync, GrabModeAsync, None, invisible, CurrentTime) == GrabSuccess)
+		if(XGrabPointer(dpy, lock->win, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+			GrabModeAsync, GrabModeAsync, None, cursor, CurrentTime) == GrabSuccess)
 			break;
 		usleep(1000);
 	}
 	if(running && (len > 0)) {
 		for(len = 1000; len; len--) {
-			if(XGrabKeyboard(dpy, lock->root, True, GrabModeAsync, GrabModeAsync, CurrentTime)
+			if(XGrabKeyboard(dpy, lock->win, True, GrabModeAsync, GrabModeAsync, CurrentTime)
 				== GrabSuccess)
 				break;
 			usleep(1000);
@@ -241,7 +228,7 @@ lockscreen(Display *dpy, int screen) {
 		lock = NULL;
 	}
 	else 
-		XSelectInput(dpy, lock->root, SubstructureNotifyMask);
+		XSelectInput(dpy, lock->win, SubstructureNotifyMask);
 
 	return lock;
 }
@@ -261,7 +248,7 @@ main(int argc, char **argv) {
 	int screen;
 
 	if((argc == 2) && !strcmp("-v", argv[1]))
-		die("slock-%s, © 2006-2012 Anselm R Garbe\n", VERSION);
+		die("slock-%s, © 2006-2012 Anselm R Garbe\n", /*VERSION*/"0.0");
 	else if(argc != 1)
 		usage();
 
