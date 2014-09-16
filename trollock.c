@@ -67,9 +67,9 @@ getpw(void) { /* only run as root */
 	pw = getpwuid(getuid());
 	if (!pw) {
 		if (errno)
-			die("slock: getpwuid: %s\n", strerror(errno));
+			die("trollock: getpwuid: %s\n", strerror(errno));
 		else
-			die("slock: cannot retrieve password entry (make sure to suid or sgid slock)\n");
+			die("trollock: cannot retrieve password entry (make sure to suid or sgid trollock)\n");
 	}
 	endpwent();
 	rval =  pw->pw_passwd;
@@ -79,7 +79,7 @@ getpw(void) { /* only run as root */
 		struct spwd *sp;
 		sp = getspnam(getenv("USER"));
 		if(!sp)
-			die("slock: cannot retrieve shadow entry (make sure to suid or sgid slock)\n");
+			die("trollock: cannot retrieve shadow entry (make sure to suid or sgid trollock)\n");
 		endspent();
 		rval = sp->sp_pwdp;
 	}
@@ -88,7 +88,7 @@ getpw(void) { /* only run as root */
 	/* drop privileges */
 	if (geteuid() == 0
 	   && ((getegid() != pw->pw_gid && setgid(pw->pw_gid) < 0) || setuid(pw->pw_uid) < 0))
-		die("slock: cannot drop privileges\n");
+		die("trollock: cannot drop privileges\n");
 	return rval;
 }
 #endif
@@ -109,7 +109,7 @@ readpw(Display *dpy, const char *pws)
 	len = llen = 0;
 	running = True;
 
-	/* As "slock" stands for "Simple X display locker", the DPMS settings
+	/* As "trollock" stands for "Simple X display locker", the DPMS settings
 	 * had been removed and you can set it with "xset" or some other
 	 * utility. This way the user can easily set a customized DPMS
 	 * timeout. */
@@ -235,7 +235,7 @@ lockscreen(Display *dpy, int screen) {
 
 static void
 usage(void) {
-	fprintf(stderr, "usage: slock [-v]\n");
+	fprintf(stderr, "usage: trollock [-v]\n");
 	exit(EXIT_FAILURE);
 }
 
@@ -248,7 +248,10 @@ main(int argc, char **argv) {
 	int screen;
 
 	if((argc == 2) && !strcmp("-v", argv[1]))
-		die("slock-%s, © 2006-2012 Anselm R Garbe\n", /*VERSION*/"0.0");
+    {
+		die("slock-1.2, © 2006-2012 Anselm R Garbe\n"
+		    "trollock-%s, © 2014 edne\n",VERSION);
+    }
 	else if(argc != 1)
 		usage();
 
@@ -257,19 +260,19 @@ main(int argc, char **argv) {
 #endif
 
 	if(!getpwuid(getuid()))
-		die("slock: no passwd entry for you\n");
+		die("trollock: no passwd entry for you\n");
 
 #ifndef HAVE_BSD_AUTH
 	pws = getpw();
 #endif
 
 	if(!(dpy = XOpenDisplay(0)))
-		die("slock: cannot open display\n");
+		die("trollock: cannot open display\n");
 	/* Get the number of screens in display "dpy" and blank them all. */
 	nscreens = ScreenCount(dpy);
 	locks = malloc(sizeof(Lock *) * nscreens);
 	if(locks == NULL)
-		die("slock: malloc: %s\n", strerror(errno));
+		die("trollock: malloc: %s\n", strerror(errno));
 	int nlocks = 0;
 	for(screen = 0; screen < nscreens; screen++) {
 		if ( (locks[screen] = lockscreen(dpy, screen)) != NULL)
