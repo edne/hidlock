@@ -1,5 +1,5 @@
 hidlock - an hidden screen locker
-====================================
+=================================
 fork of [slock](http://tools.suckless.org/slock/)
 
 
@@ -20,10 +20,10 @@ the /usr/local namespace by default).
 
 Afterwards enter the following command to build and install slock
 (if necessary as root):
-
+```bash
     make clean install
-
+```
 
 Running slock
 -------------
-Simply invoke the 'slock' command. To get out of it, enter your password.
+Simply invoke the `slock` command. To get out of it, enter your password.
