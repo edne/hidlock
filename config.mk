@@ -1,6 +1,6 @@
 # slock version
-NAME = trollock
-VERSION = 0.1
+NAME = hidlock
+VERSION = 0.0
 
 # Customize below to fit your system
 
