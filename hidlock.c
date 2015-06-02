@@ -69,7 +69,8 @@ getpw(void) { /* only run as root */
         if (errno)
             die("hidlock: getpwuid: %s\n", strerror(errno));
         else
-            die("hidlock: cannot retrieve password entry (make sure to suid or sgid hidlock)\n");
+            die("hidlock: cannot retrieve password entry (make sure to suid or \
+sgid hidlock)\n");
     }
     endpwent();
     rval =  pw->pw_passwd;
@@ -79,7 +80,8 @@ getpw(void) { /* only run as root */
         struct spwd *sp;
         sp = getspnam(getenv("USER"));
         if(!sp)
-            die("hidlock: cannot retrieve shadow entry (make sure to suid or sgid hidlock)\n");
+            die("hidlock: cannot retrieve shadow entry (make sure to suid or \
+sgid hidlock)\n");
         endspent();
         rval = sp->sp_pwdp;
     }
@@ -87,7 +89,8 @@ getpw(void) { /* only run as root */
 
     /* drop privileges */
     if (geteuid() == 0
-       && ((getegid() != pw->pw_gid && setgid(pw->pw_gid) < 0) || setuid(pw->pw_uid) < 0))
+        && ((getegid() != pw->pw_gid && setgid(pw->pw_gid) < 0)
+            || setuid(pw->pw_uid) < 0))
         die("hidlock: cannot drop privileges\n");
     return rval;
 }
@@ -147,7 +150,8 @@ readpw(Display *dpy, const char *pws)
                     --len;
                 break;
             default:
-                if(num && !iscntrl((int) buf[0]) && (len + num < sizeof passwd)) {
+                if(num && !iscntrl((int) buf[0])
+                   && (len + num < sizeof passwd)) {
                     memcpy(passwd + len, buf, num);
                     len += num;
                 }
@@ -208,14 +212,17 @@ lockscreen(Display *dpy, int screen) {
 
     XMapRaised(dpy, lock->win);
     for(len = 1000; len; len--) {
-        if(XGrabPointer(dpy, lock->win, False, ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
-            GrabModeAsync, GrabModeAsync, None, cursor, CurrentTime) == GrabSuccess)
+        if(XGrabPointer(dpy, lock->win, False,
+                        ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
+                        GrabModeAsync, GrabModeAsync,
+                        None, cursor, CurrentTime) == GrabSuccess)
             break;
         usleep(1000);
     }
     if(running && (len > 0)) {
         for(len = 1000; len; len--) {
-            if(XGrabKeyboard(dpy, lock->win, True, GrabModeAsync, GrabModeAsync, CurrentTime)
+            if(XGrabKeyboard(dpy, lock->win, True,
+                             GrabModeAsync, GrabModeAsync, CurrentTime)
                 == GrabSuccess)
                 break;
             usleep(1000);
@@ -250,7 +257,7 @@ main(int argc, char **argv) {
     if((argc == 2) && !strcmp("-v", argv[1]))
     {
         die("slock-1.2, © 2006-2012 Anselm R Garbe\n"
-            "hidlock-%s, © 2014 edne\n",VERSION);
+            "hidlock-0.0, © 2014 edne\n");
     }
     else if(argc != 1)
         usage();
